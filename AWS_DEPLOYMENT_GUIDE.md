@@ -1,4 +1,17 @@
-# AWS DynamoDB + EC2 + S3 Deployment Checklist
+cd "m:/Coding/web development/URL shortener"
+
+# Remove the old remote
+git remote remove origin
+
+# Add your new GitHub repo
+git remote add origin https://github.com/Meetparmar40/URL-Shortner.git
+
+# Verify it's correct
+git remote -v
+
+# Now push
+git branch -M main
+git push -u origin main# AWS DynamoDB + EC2 + S3 Deployment Checklist
 
 ## ✅ Backend Fully Migrated to DynamoDB
 

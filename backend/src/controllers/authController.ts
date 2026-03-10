@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { nanoid } from "nanoid";
+import { randomUUID } from "crypto";
 import { createUser, getUserByEmail } from "../models/User";
 import {
   comparePassword,
@@ -45,7 +45,7 @@ export const signup = async (
       return;
     }
 
-    const userId = nanoid();
+    const userId = randomUUID();
     const hashedPassword = await hashPassword(password);
     await createUser(userId, email, hashedPassword);
 

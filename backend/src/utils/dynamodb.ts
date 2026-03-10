@@ -1,10 +1,18 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
-const client = new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" });
-export const docClient = DynamoDBDocumentClient.from(client);
+let docClient: DynamoDBDocumentClient;
+
+export const getDocClient = (): DynamoDBDocumentClient => {
+  if (!docClient) {
+    throw new Error("DynamoDB not initialized. Call initializeDynamoDB() first.");
+  }
+  return docClient;
+};
 
 export const initializeDynamoDB = (): void => {
+  const client = new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" });
+  docClient = DynamoDBDocumentClient.from(client);
   console.log("DynamoDB client initialized");
 };
 
@@ -25,7 +33,7 @@ export const getUser = async (userId: string) => {
     TableName: getUsersTable(),
     Key: { userId },
   });
-  const result = await docClient.send(command);
+  const result = await getDocClient().send(command);
   return result.Item;
 };
 
@@ -36,7 +44,7 @@ export const getUserByEmail = async (email: string) => {
     KeyConditionExpression: "email = :email",
     ExpressionAttributeValues: { ":email": email.toLowerCase() },
   });
-  const result = await docClient.send(command);
+  const result = await getDocClient().send(command);
   return result.Items?.[0];
 };
 
@@ -50,7 +58,7 @@ export const createUser = async (userId: string, email: string, passwordHash: st
       createdAt: new Date().toISOString(),
     },
   });
-  await docClient.send(command);
+  await getDocClient().send(command);
 };
 
 export const getUrl = async (shortCode: string) => {
@@ -58,7 +66,7 @@ export const getUrl = async (shortCode: string) => {
     TableName: getUrlsTable(),
     Key: { shortCode },
   });
-  const result = await docClient.send(command);
+  const result = await getDocClient().send(command);
   return result.Item;
 };
 
@@ -77,7 +85,7 @@ export const createUrl = async (
       createdAt: new Date().toISOString(),
     },
   });
-  await docClient.send(command);
+  await getDocClient().send(command);
 };
 
 export const getUserUrls = async (userId: string) => {
@@ -88,7 +96,7 @@ export const getUserUrls = async (userId: string) => {
     ExpressionAttributeValues: { ":userId": userId },
     ScanIndexForward: false, // newest first
   });
-  const result = await docClient.send(command);
+  const result = await getDocClient().send(command);
   return result.Items || [];
 };
 
@@ -100,7 +108,7 @@ export const incrementClickCount = async (shortCode: string) => {
     ExpressionAttributeValues: { ":inc": 1, ":zero": 0 },
     ReturnValues: "ALL_NEW",
   });
-  const result = await docClient.send(command);
+  const result = await getDocClient().send(command);
   return result.Attributes;
 };
 

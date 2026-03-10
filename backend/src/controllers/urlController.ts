@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { nanoid } from "nanoid";
+import { randomBytes } from "crypto";
 import {
   createUrl,
   getUrl,
@@ -10,6 +10,18 @@ import {
 import { isValidHttpUrl } from "../utils/validators";
 
 const SHORT_CODE_LENGTH = 7;
+const SHORT_CODE_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const generateShortCode = (length: number): string => {
+  const bytes = randomBytes(length);
+  let code = "";
+
+  for (let i = 0; i < length; i += 1) {
+    code += SHORT_CODE_ALPHABET[bytes[i] % SHORT_CODE_ALPHABET.length];
+  }
+
+  return code;
+};
 
 export const shortenUrl = async (
   req: Request,
@@ -35,11 +47,11 @@ export const shortenUrl = async (
       return;
     }
 
-    let shortCode = nanoid(SHORT_CODE_LENGTH);
+    let shortCode = generateShortCode(SHORT_CODE_LENGTH);
 
     // Keep generating if collision occurs.
     while (await checkShortCodeExists(shortCode)) {
-      shortCode = nanoid(SHORT_CODE_LENGTH);
+      shortCode = generateShortCode(SHORT_CODE_LENGTH);
     }
 
     await createUrl(shortCode, userId, originalUrl);

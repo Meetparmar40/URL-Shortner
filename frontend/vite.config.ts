@@ -6,9 +6,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/auth": "http://localhost:5000",
-      "/url": "http://localhost:5000",
-      "/s": "http://localhost:5000",
+      "/auth": "http://localhost:5001",
+      "/url": "http://localhost:5001",
+      "/s/": "http://localhost:5001",
     },
   },
 });
