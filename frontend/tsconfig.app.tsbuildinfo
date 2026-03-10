@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/api/api.ts","./src/components/urlform.tsx","./src/components/urllist.tsx","./src/pages/dashboard.tsx","./src/pages/login.tsx","./src/pages/signup.tsx"],"version":"5.9.3"}

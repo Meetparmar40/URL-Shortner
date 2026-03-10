@@ -1,0 +1,60 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { signup } from "../api/api";
+
+const Signup = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await signup(email, password);
+      navigate("/login");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="page">
+      <div className="card">
+        <h1>Signup</h1>
+        <form onSubmit={handleSubmit} className="form">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password (min 6 chars)"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            minLength={6}
+          />
+          {error && <p className="error">{error}</p>}
+          <button type="submit" disabled={loading}>
+            {loading ? "Creating account..." : "Signup"}
+          </button>
+        </form>
+        <p>
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Signup;
