@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../api/api";
+import { GoogleLogin } from "@react-oauth/google";
+import { login, googleLogin } from "../api/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -21,6 +22,21 @@ const Login = () => {
       navigate("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError("");
+    setLoading(true);
+    try {
+      const response = await googleLogin(credentialResponse.credential);
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("userEmail", response.user.email);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google login failed");
     } finally {
       setLoading(false);
     }
@@ -50,6 +66,14 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+        <div className="divider">OR</div>
+        <div className="google-btn">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google login failed")}
+            useOneTap
+          />
+        </div>
         <p>
           No account? <Link to="/signup">Signup</Link>
         </p>

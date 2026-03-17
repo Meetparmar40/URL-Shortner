@@ -1,0 +1,14 @@
+version: 1.0
+runtime:
+  name: nodejs
+  version: "20"
+build:
+  commands:
+    - cd backend
+    - npm install
+    - npm run build
+run:
+  command: node backend/dist/server.js
+  network:
+    port: 5000
+    env: PORT

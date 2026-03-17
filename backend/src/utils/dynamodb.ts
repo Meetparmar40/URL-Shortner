@@ -48,7 +48,7 @@ export const getUserByEmail = async (email: string) => {
   return result.Items?.[0];
 };
 
-export const createUser = async (userId: string, email: string, passwordHash: string) => {
+export const createUser = async (userId: string, email: string, passwordHash?: string) => {
   const command = new PutCommand({
     TableName: getUsersTable(),
     Item: {
@@ -57,6 +57,29 @@ export const createUser = async (userId: string, email: string, passwordHash: st
       passwordHash,
       createdAt: new Date().toISOString(),
     },
+  });
+  await getDocClient().send(command);
+};
+
+export const createGoogleUser = async (userId: string, email: string, googleId: string) => {
+  const command = new PutCommand({
+    TableName: getUsersTable(),
+    Item: {
+      userId,
+      email: email.toLowerCase(),
+      googleId,
+      createdAt: new Date().toISOString(),
+    },
+  });
+  await getDocClient().send(command);
+};
+
+export const updateUserGoogleId = async (userId: string, googleId: string) => {
+  const command = new UpdateCommand({
+    TableName: getUsersTable(),
+    Key: { userId },
+    UpdateExpression: "SET googleId = :googleId",
+    ExpressionAttributeValues: { ":googleId": googleId },
   });
   await getDocClient().send(command);
 };

@@ -2,8 +2,9 @@
 export interface IUser {
   userId: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  googleId?: string;
   createdAt: string;
 }
 
-export { createUser, getUserByEmail, getUser } from "../utils/dynamodb";
+export { createUser, getUserByEmail, getUser, createGoogleUser, updateUserGoogleId } from "../utils/dynamodb";

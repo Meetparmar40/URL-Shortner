@@ -1,3 +1,7 @@
+// In production (Amplify), set VITE_API_BASE_URL to your App Runner URL.
+// Locally, it's empty so Vite proxy handles it.
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
 type RequestOptions = {
   method?: "GET" | "POST";
   body?: unknown;
@@ -8,7 +12,7 @@ const request = async <T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> => {
-  const response = await fetch(endpoint, {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     method: options.method ?? "GET",
     headers: {
       "Content-Type": "application/json",
@@ -43,6 +47,16 @@ export const login = (email: string, password: string) => {
     {
       method: "POST",
       body: { email, password },
+    }
+  );
+};
+
+export const googleLogin = (token: string) => {
+  return request<{ token: string; user: { id: string; email: string } }>(
+    "/auth/google",
+    {
+      method: "POST",
+      body: { token },
     }
   );
 };

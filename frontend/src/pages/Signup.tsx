@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signup } from "../api/api";
+import { GoogleLogin } from "@react-oauth/google";
+import { signup, googleLogin } from "../api/api";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -16,9 +17,25 @@ const Signup = () => {
 
     try {
       await signup(email, password);
+      // After signup, we could auto-login or redirect to login
       navigate("/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError("");
+    setLoading(true);
+    try {
+      const response = await googleLogin(credentialResponse.credential);
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("userEmail", response.user.email);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google signup failed");
     } finally {
       setLoading(false);
     }
@@ -38,17 +55,24 @@ const Signup = () => {
           />
           <input
             type="password"
-            placeholder="Password (min 6 chars)"
+            placeholder="Password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
-            minLength={6}
           />
           {error && <p className="error">{error}</p>}
           <button type="submit" disabled={loading}>
-            {loading ? "Creating account..." : "Signup"}
+            {loading ? "Signing up..." : "Signup"}
           </button>
         </form>
+        <div className="divider">OR</div>
+        <div className="google-btn">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google login failed")}
+            useOneTap
+          />
+        </div>
         <p>
           Already have an account? <Link to="/login">Login</Link>
         </p>
@@ -58,3 +82,4 @@ const Signup = () => {
 };
 
 export default Signup;
+
