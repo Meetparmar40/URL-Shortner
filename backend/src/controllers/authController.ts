@@ -4,6 +4,7 @@ import { OAuth2Client } from "google-auth-library";
 import {
   createUser,
   getUserByEmail,
+  getUser,
   createGoogleUser,
   updateUserGoogleId,
 } from "../models/User";
