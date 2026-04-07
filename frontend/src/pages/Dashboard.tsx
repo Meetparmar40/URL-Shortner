@@ -27,8 +27,9 @@ const Dashboard = () => {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load URLs";
       setError(message);
-      if (message.toLowerCase().includes("token")) {
+      if (message.toLowerCase().includes("token") || message.toLowerCase().includes("failed")) {
         localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("userEmail");
         navigate("/login");
       }
@@ -53,6 +54,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("userEmail");
     navigate("/login");
   };

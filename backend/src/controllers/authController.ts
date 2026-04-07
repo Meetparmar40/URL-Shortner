@@ -10,15 +10,15 @@ import {
 import {
   comparePassword,
   hashPassword,
-  signToken,
+  signAccessToken,
+  signRefreshToken,
+  verifyToken,
 } from "../utils/auth";
 import {
   isStrongEnoughPassword,
   isValidEmail,
 } from "../utils/validators";
-
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
+// Removed googleClient instantiation
 export const signup = async (
   req: Request,
   res: Response,
@@ -66,88 +66,89 @@ export const signup = async (
   }
 };
 
-export const login = async (
+export const oauthToken = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, password } = req.body as {
-      email?: string;
-      password?: string;
-    };
+    const { grant_type } = req.body;
 
-    if (!email || !password) {
-      res.status(400).json({ message: "Email and password are required" });
+    if (grant_type === "password") {
+      const { email, password } = req.body as {
+        email?: string;
+        password?: string;
+      };
+
+      if (!email || !password) {
+        res.status(400).json({ error: "invalid_request", error_description: "Email and password are required" });
+        return;
+      }
+
+      const user = await getUserByEmail(email);
+      if (!user) {
+        res.status(401).json({ error: "invalid_client", error_description: "Invalid credentials" });
+        return;
+      }
+
+      if (!user.passwordHash) {
+        res.status(401).json({ error: "invalid_client", error_description: "Please log in with your provider or reset password" });
+        return;
+      }
+
+      const isPasswordMatch = await comparePassword(password, user.passwordHash);
+      if (!isPasswordMatch) {
+        res.status(401).json({ error: "invalid_client", error_description: "Invalid credentials" });
+        return;
+      }
+
+      const access_token = signAccessToken({ userId: user.userId, email: user.email });
+      const refresh_token = signRefreshToken({ userId: user.userId });
+
+      res.status(200).json({
+        access_token,
+        refresh_token,
+        token_type: "Bearer",
+        expires_in: 900, // 15 minutes
+        user: { id: user.userId, email: user.email },
+      });
+      return;
+
+    } else if (grant_type === "refresh_token") {
+      const { refresh_token } = req.body as { refresh_token?: string };
+
+      if (!refresh_token) {
+        res.status(400).json({ error: "invalid_request", error_description: "Refresh token is required" });
+        return;
+      }
+
+      try {
+        const decoded = verifyToken(refresh_token);
+        const user = await getUser(decoded.userId);
+
+        if (!user) {
+          res.status(401).json({ error: "invalid_grant", error_description: "Invalid user" });
+          return;
+        }
+
+        const access_token = signAccessToken({ userId: user.userId, email: user.email });
+        const new_refresh_token = signRefreshToken({ userId: user.userId });
+
+        res.status(200).json({
+          access_token,
+          refresh_token: new_refresh_token,
+          token_type: "Bearer",
+          expires_in: 900,
+        });
+        return;
+      } catch (err) {
+        res.status(401).json({ error: "invalid_grant", error_description: "Invalid or expired refresh token" });
+        return;
+      }
+    } else {
+      res.status(400).json({ error: "unsupported_grant_type", error_description: "Unsupported grant type" });
       return;
     }
-
-    const user = await getUserByEmail(email);
-    if (!user) {
-      res.status(401).json({ message: "Invalid credentials" });
-      return;
-    }
-
-    if (!user.passwordHash) {
-      res.status(401).json({ message: "Please log in with Google" });
-      return;
-    }
-
-    const isPasswordMatch = await comparePassword(password, user.passwordHash);
-    if (!isPasswordMatch) {
-      res.status(401).json({ message: "Invalid credentials" });
-      return;
-    }
-
-    const token = signToken({ userId: user.userId, email: user.email });
-
-    res.status(200).json({
-      token,
-      user: { id: user.userId, email: user.email },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const googleLogin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { token } = req.body as { token: string };
-
-    const ticket = await googleClient.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      res.status(400).json({ message: "Invalid Google token" });
-      return;
-    }
-
-    const { email, sub: googleId } = payload;
-
-    let user = await getUserByEmail(email);
-
-    if (!user) {
-      const userId = randomUUID();
-      await createGoogleUser(userId, email, googleId);
-      user = { userId, email, googleId, createdAt: new Date().toISOString() };
-    } else if (!user.googleId) {
-      await updateUserGoogleId(user.userId, googleId);
-      user.googleId = googleId;
-    }
-
-    const jwtToken = signToken({ userId: user.userId, email: user.email });
-
-    res.status(200).json({
-      token: jwtToken,
-      user: { id: user.userId, email: user.email },
-    });
   } catch (error) {
     next(error);
   }

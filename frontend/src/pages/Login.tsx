@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GoogleLogin } from "@react-oauth/google";
-import { login, googleLogin } from "../api/api";
+import { login } from "../api/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +16,8 @@ const Login = () => {
 
     try {
       const response = await login(email, password);
-      localStorage.setItem("token", response.token);
+      localStorage.setItem("token", response.access_token);
+      localStorage.setItem("refreshToken", response.refresh_token);
       localStorage.setItem("userEmail", response.user.email);
       navigate("/dashboard");
     } catch (err) {
@@ -27,20 +27,6 @@ const Login = () => {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
-    setError("");
-    setLoading(true);
-    try {
-      const response = await googleLogin(credentialResponse.credential);
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("userEmail", response.user.email);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Google login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="page">
@@ -66,14 +52,6 @@ const Login = () => {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-        <div className="divider">OR</div>
-        <div className="google-btn">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setError("Google login failed")}
-            useOneTap
-          />
-        </div>
         <p>
           No account? <Link to="/signup">Signup</Link>
         </p>

@@ -14,12 +14,20 @@ export const comparePassword = async (
   return bcrypt.compare(password, hashedPassword);
 };
 
-export const signToken = (payload: { userId: string; email: string }): string => {
+export const signAccessToken = (payload: { userId: string; email: string }): string => {
   const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is missing in environment variables");
+  return jwt.sign(payload, secret, { expiresIn: "15m" });
+};
 
-  if (!secret) {
-    throw new Error("JWT_SECRET is missing in environment variables");
-  }
-
+export const signRefreshToken = (payload: { userId: string }): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is missing in environment variables");
   return jwt.sign(payload, secret, { expiresIn: "7d" });
+};
+
+export const verifyToken = (token: string): { userId: string; email?: string } => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is missing in environment variables");
+  return jwt.verify(token, secret) as { userId: string; email?: string };
 };
