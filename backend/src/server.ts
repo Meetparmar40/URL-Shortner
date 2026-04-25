@@ -42,7 +42,7 @@ app.use(errorHandler);
 const PORT = Number(process.env.PORT || 5000);
 
 const startServer = async (): Promise<void> => {
-  app.listen(PORT, () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
     console.log("Connected to DynamoDB");
   });

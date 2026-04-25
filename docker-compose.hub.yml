@@ -56,11 +56,11 @@ services:
     image: meetp40/url-shortener:latest
     container_name: url-shortener-app
     ports:
-      - "5000:5000"
+      - "5005:5000"
     environment:
       PORT: 5000
       JWT_SECRET: docker-local-dev-secret-change-in-production
-      BASE_URL: http://localhost:5000
+      BASE_URL: http://localhost:5005
       AWS_REGION: us-east-1
       USERS_TABLE: users
       URLs_TABLE: urls
