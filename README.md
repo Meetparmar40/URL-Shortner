@@ -59,22 +59,22 @@ The easiest way to run this project locally — **no AWS account or credentials 
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
 
-### Option 1: Pull from Docker Hub (Easiest — No Cloning Required)
+### Option 1: True Single-Click (Easiest — No Cloning Required)
 
 🐳 **Docker Hub**: [hub.docker.com/r/meetp40/url-shortener](https://hub.docker.com/r/meetp40/url-shortener)
 
-Just download [`docker-compose.hub.yml`](docker-compose.hub.yml) and run:
+You don't even need to clone this repo! Just download the run script for your operating system and double-click/run it. It will automatically download the required files, pull the image from Docker Hub, and start the app.
 
-```bash
-docker compose -f docker-compose.hub.yml up
-```
+**For Windows:**
+1. Download **[`run-app.bat`](https://raw.githubusercontent.com/Meetparmar40/URL-Shortner/main/run-app.bat)** (Right-click -> Save link as...)
+2. Double-click the downloaded file.
 
-Or do it in one command (no files needed):
+**For Mac/Linux:**
+1. Download **[`run-app.sh`](https://raw.githubusercontent.com/Meetparmar40/URL-Shortner/main/run-app.sh)**
+2. Make it executable: `chmod +x run-app.sh`
+3. Run it: `./run-app.sh`
 
-```bash
-curl -O https://raw.githubusercontent.com/Meetparmar40/URL-Shortner/main/docker-compose.hub.yml
-docker compose -f docker-compose.hub.yml up
-```
+*(Alternatively, if you prefer running it manually, just download [`docker-compose.hub.yml`](https://raw.githubusercontent.com/Meetparmar40/URL-Shortner/main/docker-compose.hub.yml) and run `docker compose -f docker-compose.hub.yml up -d`)*
 
 Open **http://localhost:5000** — that's it! 🎉
 
