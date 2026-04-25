@@ -1,0 +1,38 @@
+services:
+  # ── DynamoDB Local ────────────────────────────────────────
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    user: root
+
+  # ── One-shot init: create tables & GSIs ───────────────────
+  dynamodb-init:
+    image: amazon/aws-cli:latest
+    container_name: dynamodb-init
+    depends_on:
+      - dynamodb-local
+    environment:
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - ./scripts/create-tables.sh:/scripts/create-tables.sh:ro
+    entrypoint: ["sh", "/scripts/create-tables.sh"]
+
+  # ── URL Shortener App ────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: url-shortener-app
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env.docker
+    depends_on:
+      dynamodb-init:
+        condition: service_completed_successfully
+    restart: unless-stopped

@@ -51,15 +51,73 @@ URLs_TABLE=urls
 
 **Note:** If running on EC2 with IAM role, no AWS credentials in `.env` are needed (roles handle auth).
 
-## API Routes
+## Run with Docker (Recommended for Local Development)
 
-- `POST /auth/signup`
-- `POST /auth/login`
-- `POST /url/shorten` (protected)
-- `GET /url/user` (protected)
-- `GET /s/:shortCode`
+The easiest way to run this project locally — **no AWS account or credentials needed**.
 
-## Local Run
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+
+### Option 1: Pull from Docker Hub (Easiest — No Cloning Required)
+
+🐳 **Docker Hub**: [hub.docker.com/r/meetp40/url-shortener](https://hub.docker.com/r/meetp40/url-shortener)
+
+Just download [`docker-compose.hub.yml`](docker-compose.hub.yml) and run:
+
+```bash
+docker compose -f docker-compose.hub.yml up
+```
+
+Or do it in one command (no files needed):
+
+```bash
+curl -O https://raw.githubusercontent.com/Meetparmar40/URL-Shortner/main/docker-compose.hub.yml
+docker compose -f docker-compose.hub.yml up
+```
+
+Open **http://localhost:5000** — that's it! 🎉
+
+### Option 2: Build from Source
+
+```bash
+git clone https://github.com/Meetparmar40/URL-Shortner.git
+cd URL-Shortner
+docker compose up --build
+```
+
+Open **http://localhost:5000**
+
+### What Docker Sets Up
+
+| Container | Purpose |
+|-----------|---------|
+| `dynamodb-local` | Local DynamoDB emulator (no AWS needed) |
+| `dynamodb-init` | Auto-creates required tables, then exits |
+| `url-shortener-app` | The full app (frontend + backend) on port 5000 |
+
+### Useful Docker Commands
+
+```bash
+# Start in background
+docker compose up -d
+
+# View logs
+docker compose logs -f app
+
+# Stop everything
+docker compose down
+```
+
+### Notes
+
+- Data is stored in-memory and resets when containers stop
+- The init container auto-creates tables on every startup
+- Google OAuth won't work locally (email/password auth works perfectly)
+
+---
+
+## Local Run (Without Docker)
 
 From project root:
 

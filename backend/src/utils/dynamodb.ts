@@ -11,7 +11,18 @@ export const getDocClient = (): DynamoDBDocumentClient => {
 };
 
 export const initializeDynamoDB = (): void => {
-  const client = new DynamoDBClient({ region: process.env.AWS_REGION || "us-east-1" });
+  const config: Record<string, unknown> = {
+    region: process.env.AWS_REGION || "us-east-1",
+  };
+
+  // When DYNAMODB_ENDPOINT is set (e.g. Docker with DynamoDB Local),
+  // connect to the local instance instead of AWS.
+  if (process.env.DYNAMODB_ENDPOINT) {
+    config.endpoint = process.env.DYNAMODB_ENDPOINT;
+    config.credentials = { accessKeyId: "local", secretAccessKey: "local" };
+  }
+
+  const client = new DynamoDBClient(config);
   docClient = DynamoDBDocumentClient.from(client);
   console.log("DynamoDB client initialized");
 };

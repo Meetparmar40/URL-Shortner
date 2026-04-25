@@ -9,6 +9,7 @@ import {
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import { ToastProvider } from "./components/ToastContext";
 import "./styles.css";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -22,19 +23,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+      <ToastProvider>
+        {/* Animated mesh gradient background */}
+        <div className="mesh-bg" aria-hidden="true" />
+
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </ToastProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

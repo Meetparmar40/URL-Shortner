@@ -1,0 +1,71 @@
+# ============================================================
+# URL Shortener — Docker Compose (Pre-built from Docker Hub)
+# ============================================================
+# Run:  docker compose -f docker-compose.hub.yml up
+# Open: http://localhost:5000
+# Stop: docker compose -f docker-compose.hub.yml down
+# ============================================================
+
+services:
+  # ── DynamoDB Local ────────────────────────────────────────
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    user: root
+
+  # ── One-shot init: create tables & GSIs ───────────────────
+  dynamodb-init:
+    image: amazon/aws-cli:latest
+    container_name: dynamodb-init
+    depends_on:
+      - dynamodb-local
+    environment:
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_DEFAULT_REGION: us-east-1
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for DynamoDB Local..."
+        until aws dynamodb list-tables --endpoint-url http://dynamodb-local:8000 --region us-east-1 > /dev/null 2>&1; do
+          sleep 2
+        done
+        echo "Creating tables..."
+        aws dynamodb create-table \
+          --endpoint-url http://dynamodb-local:8000 --region us-east-1 \
+          --table-name users \
+          --attribute-definitions AttributeName=userId,AttributeType=S AttributeName=email,AttributeType=S \
+          --key-schema AttributeName=userId,KeyType=HASH \
+          --global-secondary-indexes '[{"IndexName":"email-index","KeySchema":[{"AttributeName":"email","KeyType":"HASH"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' \
+          --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 2>&1 || true
+        aws dynamodb create-table \
+          --endpoint-url http://dynamodb-local:8000 --region us-east-1 \
+          --table-name urls \
+          --attribute-definitions AttributeName=shortCode,AttributeType=S AttributeName=userId,AttributeType=S AttributeName=createdAt,AttributeType=S \
+          --key-schema AttributeName=shortCode,KeyType=HASH \
+          --global-secondary-indexes '[{"IndexName":"userId-createdAt-index","KeySchema":[{"AttributeName":"userId","KeyType":"HASH"},{"AttributeName":"createdAt","KeyType":"RANGE"}],"Projection":{"ProjectionType":"ALL"},"ProvisionedThroughput":{"ReadCapacityUnits":5,"WriteCapacityUnits":5}}]' \
+          --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 2>&1 || true
+        echo "Done! Tables:"
+        aws dynamodb list-tables --endpoint-url http://dynamodb-local:8000 --region us-east-1
+
+  # ── URL Shortener App (from Docker Hub) ───────────────────
+  app:
+    image: meetp40/url-shortener:latest
+    container_name: url-shortener-app
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      JWT_SECRET: docker-local-dev-secret-change-in-production
+      BASE_URL: http://localhost:5000
+      AWS_REGION: us-east-1
+      USERS_TABLE: users
+      URLs_TABLE: urls
+      DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+    depends_on:
+      dynamodb-init:
+        condition: service_completed_successfully
+    restart: unless-stopped

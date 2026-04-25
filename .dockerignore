@@ -1,0 +1,31 @@
+node_modules/
+dist/
+build/
+.git/
+.gitignore
+*.pem
+*.log
+
+# Environment files with real secrets
+backend/.env
+frontend/.env
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation & deployment configs (not needed in image)
+AWS_DEPLOYMENT_GUIDE.md
+amplify.yml
+apprunner.yaml
+gemini.md
+client_secret_*.json
+
+# Docker
+docker-compose.yml
+.dockerignore

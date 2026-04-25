@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../api/api";
+import { useToast } from "../components/ToastContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -8,6 +9,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -19,41 +21,73 @@ const Login = () => {
       localStorage.setItem("token", response.access_token);
       localStorage.setItem("refreshToken", response.refresh_token);
       localStorage.setItem("userEmail", response.user.email);
+      showToast("Welcome back!", "success");
       navigate("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const msg = err instanceof Error ? err.message : "Login failed";
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <div className="page">
       <div className="card">
-        <h1>Login</h1>
+        <div className="auth-brand">
+          <div className="brand-icon">🔗</div>
+          <h1>Welcome Back</h1>
+          <p>Sign in to your Sniplink account</p>
+        </div>
+
         <form onSubmit={handleSubmit} className="form">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-          />
-          {error && <p className="error">{error}</p>}
-          <button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+          <div className="input-group">
+            <input
+              id="login-email"
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <span className="input-icon">✉</span>
+          </div>
+
+          <div className="input-group">
+            <input
+              id="login-password"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <span className="input-icon">🔒</span>
+          </div>
+
+          {error && (
+            <div className="alert-error">
+              <span>⚠</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          <button id="login-submit" type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spinner" />
+                Signing in…
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
-        <p>
-          No account? <Link to="/signup">Signup</Link>
+
+        <p className="auth-footer">
+          Don't have an account?{" "}
+          <Link to="/signup">Create one</Link>
         </p>
       </div>
     </div>
